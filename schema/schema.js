@@ -1,8 +1,18 @@
-const {GraphQLSchema,GraphQLObjectType,GraphQLString } = require("graphql");
+const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt } = require("graphql");
 // these are classes which comes from graphql
 // GraphQLSchema -> schema define
 // queries or mutation ko ham GraphQLObjectType ke andar hi likhte hai 
 // GraphQLString -> return karega string ko
+
+const UserType = new GraphQLObjectType({
+    name:"User",
+    fields:{
+        id:{ type:GraphQLString},
+        name:{ type:GraphQLString},
+        age:{ type:GraphQLInt},
+    }
+})
+
 
 const RootQuery = new GraphQLObjectType({
     // name mandatory hai ye non empty hota hai 
@@ -11,8 +21,25 @@ const RootQuery = new GraphQLObjectType({
 
     name:'RootQueryType',
     fields:{
+
+        user:{
+            type:UserType,
+            // args for input
+            args:{id: {type:GraphQLString}},
+            // resolve 2 argument leta hai
+            resolve(parent,args){
+                const users = [
+                    {id:'1',name:"Love Varshney",age:20},
+                    {id:'2',name:"Keshav Varshney",age:25}
+                ];
+
+                return users.find(user => user.id === args.id);
+            }
+        },
+
         // hello ek query hai 
         hello:{
+            // schema strongly type hota hai 
             type:GraphQLString, // kis type ka data return karna hai (GraphQLString,GraphQLInt,GraphQLString,GraphQLBoolean etc...)
 
             // resolve is the graphql backend brain 
