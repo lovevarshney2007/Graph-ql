@@ -4,6 +4,11 @@ const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt } = require("gr
 // queries or mutation ko ham GraphQLObjectType ke andar hi likhte hai 
 // GraphQLString -> return karega string ko
 
+ const users = [
+                    {id:'1',name:"Love Varshney",age:20},
+                    {id:'2',name:"Keshav Varshney",age:25}
+                ];
+
 const UserType = new GraphQLObjectType({
     name:"User",
     fields:{
@@ -28,10 +33,7 @@ const RootQuery = new GraphQLObjectType({
             args:{id: {type:GraphQLString}},
             // resolve 2 argument leta hai
             resolve(parent,args){
-                const users = [
-                    {id:'1',name:"Love Varshney",age:20},
-                    {id:'2',name:"Keshav Varshney",age:25}
-                ];
+            
 
                 return users.find(user => user.id === args.id);
             }
@@ -60,9 +62,73 @@ const RootQuery = new GraphQLObjectType({
 
 })
 
+// Mutation Type working
+const Mutation = new GraphQLObjectType({
+    name:"Mutation",
+    fields:{
+        addUser:{
+            type:UserType,
+            args:{
+                name:{type:GraphQLString},
+                age:{type:GraphQLInt}
+            },
+            resolve(parent,args){
+                const user = {
+                    id:users.length + 1 + "",
+                    name:args.name,
+                    age:args.age
+                }
+
+                users.push(user);
+                console.log(users)
+                return user;
+            }
+        },
+
+        updateUser:{
+            type:UserType,
+            args:{
+                id:{type:GraphQLString},
+                name:{type:GraphQLString},
+                age:{type:GraphQLInt}
+            },
+            resolve(parent,args){
+                const user = users.find(u => u.id === args.id);
+                if(user){
+                    user.name = args.name || user.name,
+                    user.age = args.age || user.age
+
+                    console.log(users)
+                    return user;
+                }
+
+                throw new Error("User not Found");
+                
+            }
+        },
+
+        deleteUser:{
+            type:UserType,
+            args:{
+                id:{type:GraphQLString}
+            },
+            resolve(parent,args){
+                const index = users.findIndex(u => u.id === args.id);
+                if(index === -1) throw new Error("User not found");
+                console.log("User deleted successfully");
+               
+                return users.splice(index,1)[0];
+                 console.log(users);
+                
+            }
+        }
+    }
+})  
+
 module.exports = new GraphQLSchema({
     // rootquery ko schema me register kar rahe hai (key ke saath)
-    query:RootQuery
+    query:RootQuery,
+    mutation:Mutation
 });
 
 
