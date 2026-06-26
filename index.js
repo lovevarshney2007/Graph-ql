@@ -1,3 +1,9 @@
+require("dotenv").config();
+const mongoose = require("mongoose")
+mongoose.connect(process.env.MONGO_URI)
+.then(()=> console.log("Mongodb Coneected"))
+.catch(err => console.log(err));
+
 const express = require("express")
 const {graphqlHTTP} = require("express-graphql")
 // express-graphql middleware for connectivity between express and graphsql

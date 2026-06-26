@@ -1,13 +1,10 @@
-const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt } = require("graphql");
+const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt, GraphQLList } = require("graphql");
 // these are classes which comes from graphql
 // GraphQLSchema -> schema define
 // queries or mutation ko ham GraphQLObjectType ke andar hi likhte hai 
 // GraphQLString -> return karega string ko
 
- const users = [
-                    {id:'1',name:"Love Varshney",age:20},
-                    {id:'2',name:"Keshav Varshney",age:25}
-                ];
+const User = require("../models/UserModel")
 
 const UserType = new GraphQLObjectType({
     name:"User",
@@ -27,15 +24,20 @@ const RootQuery = new GraphQLObjectType({
     name:'RootQueryType',
     fields:{
 
+        users:{
+            type: new GraphQLList(UserType),
+            resolve(parent,args){
+                return User.find();
+            }
+        },
+
         user:{
             type:UserType,
             // args for input
             args:{id: {type:GraphQLString}},
             // resolve 2 argument leta hai
             resolve(parent,args){
-            
-
-                return users.find(user => user.id === args.id);
+                return  User.findById(args.id)  
             }
         },
 
@@ -72,16 +74,12 @@ const Mutation = new GraphQLObjectType({
                 name:{type:GraphQLString},
                 age:{type:GraphQLInt}
             },
-            resolve(parent,args){
-                const user = {
-                    id:users.length + 1 + "",
+            async resolve(parent,args){
+                const user = new User({
                     name:args.name,
                     age:args.age
-                }
-
-                users.push(user);
-                console.log(users)
-                return user;
+                });
+                return await user.save();
             }
         },
 
@@ -92,17 +90,14 @@ const Mutation = new GraphQLObjectType({
                 name:{type:GraphQLString},
                 age:{type:GraphQLInt}
             },
-            resolve(parent,args){
-                const user = users.find(u => u.id === args.id);
-                if(user){
-                    user.name = args.name || user.name,
-                    user.age = args.age || user.age
-
-                    console.log(users)
-                    return user;
-                }
-
-                throw new Error("User not Found");
+            async resolve(parent,args){
+               return await User.findByIdAndUpdate(
+                args.id,
+                {
+                    name:args.name,
+                    age:args.age
+                },{new : true}
+               )
                 
             }
         },
@@ -112,18 +107,15 @@ const Mutation = new GraphQLObjectType({
             args:{
                 id:{type:GraphQLString}
             },
-            resolve(parent,args){
-                const index = users.findIndex(u => u.id === args.id);
-                if(index === -1) throw new Error("User not found");
-                console.log("User deleted successfully");
+            async resolve(parent,args){
                
-                return users.splice(index,1)[0];
-                 console.log(users);
+               return await User.findByIdAndDelete(args.id)
                 
             }
         }
     }
 })  
+
 
 module.exports = new GraphQLSchema({
     // rootquery ko schema me register kar rahe hai (key ke saath)
