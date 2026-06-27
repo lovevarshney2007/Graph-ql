@@ -8,7 +8,7 @@ const express = require("express")
 const {graphqlHTTP} = require("express-graphql")
 // express-graphql middleware for connectivity between express and graphsql
 // graphqlHttp is like http in normal server which handle http request
-const schema = require("./schema/schema")
+const schema = require("./schema/index")
 
 
 const app = express();
