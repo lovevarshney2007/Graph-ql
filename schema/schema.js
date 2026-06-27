@@ -1,8 +1,5 @@
-const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt, GraphQLList } = require("graphql");
-// these are classes which comes from graphql
-// GraphQLSchema -> schema define
-// queries or mutation ko ham GraphQLObjectType ke andar hi likhte hai 
-// GraphQLString -> return karega string ko
+const {GraphQLSchema,GraphQLObjectType,GraphQLString, GraphQLInt, GraphQLList ,GraphQLInputObjectType,GraphQLNonNull,} = require("graphql");
+
 
 const User = require("../models/UserModel")
 
@@ -12,6 +9,14 @@ const UserType = new GraphQLObjectType({
         id:{ type:GraphQLString},
         name:{ type:GraphQLString},
         age:{ type:GraphQLInt},
+    }
+})
+
+const UserInputType = new GraphQLInputObjectType({
+    name: 'UserInput',
+    fields : {
+        name:{type:new GraphQLNonNull(GraphQLString)},
+                age:{type:GraphQLInt}
     }
 })
 
@@ -71,13 +76,18 @@ const Mutation = new GraphQLObjectType({
         addUser:{
             type:UserType,
             args:{
-                name:{type:GraphQLString},
-                age:{type:GraphQLInt}
+                input : {
+                    type:UserInputType
+                }
             },
-            async resolve(parent,args){
+            async resolve(_,{input}){
+                // validation
+                if(!input.name || input.name.length < 3){
+                    throw new Error("Name must be at least 3 characters")
+                }
                 const user = new User({
-                    name:args.name,
-                    age:args.age
+                    name:input.name,
+                    age:input.age
                 });
                 return await user.save();
             }
