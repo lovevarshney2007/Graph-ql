@@ -1,7 +1,8 @@
-const {graphQLObjectType,GraphQLID,GraphQLString,GraphQLList, GraphQLObjectType,GraphQLSchema} = require("graphql")
+const {graphQLObjectType,GraphQLID,GraphQLString,GraphQLList, GraphQLObjectType,GraphQLSchema,GraphQLInt} = require("graphql")
 
 const AuthorType = require("../types/AuthorType");
 const BookType = require("../types/BookType")
+const BookPaginationType = require("../types/BookPaginationType")
 const Author = require("../models/AuthorModel")
 const Book = require("../models/BookModel")
 
@@ -46,11 +47,34 @@ const RootQuery = new GraphQLObjectType({
         },
 
         books : {
-            type: new GraphQLList(BookType),
-            resolve(){
-                return Book.find();
-            }
+            type: BookPaginationType,
+            args:{
+                page: {type: GraphQLInt},
+                authorId: {type: GraphQLID}
+            },
+            async resolve(parent, args){
+                const limit = 2;
+                const page = args.page || 1;
+                const offsett = (page - 1) * limit;
+
+                const filter = {};
+                if (args.authorId) {
+                    filter.authorId = args.authorId;
+                }
+
+                const totalCount = await Book.countDocuments(filter);
+                const taotalPages = Math.ceil(totalCount / limit);
+                const books = await Book.find(filter).skip(offsett).limit(limit);
+               
+                return {
+                    books,
+                    totalPages: taotalPages,
+                    currentPage: page,
+                    hasNextPage: page < taotalPages ? "true" : "false",
+                    hasPrevPage: page > 1 ? "true" : "false"
+                }
         }
+    }
     }
 })
 
