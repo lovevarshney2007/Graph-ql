@@ -5,7 +5,11 @@ const BookSchema = new mongoose.Schema({
     authorId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Author"
-    }
+    },
+    categoryIds:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Category"
+    }]
 })
 
 module.exports = mongoose.model("Book",BookSchema);
